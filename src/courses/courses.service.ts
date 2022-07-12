@@ -1,44 +1,48 @@
 /* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Course } from './entities/course.entity';
 
 @Injectable()
 export class CoursesService {
-    private courses: Course[] = [
+    private readonly courses: Course[] = [
         {
             id: 1,
-            name: 'teste do name course',
-            description: 'teste description',
-            tags: ['teste', 'node', 'javascript'],
-        }
+            name: 'Fundamentos do framework NestJS',
+            description: 'Fundamentos do framework NestJS',
+            tags: ['node.js', 'nestjs', 'javascript'],
+        },
     ];
 
-
     findAll() {
-        return this.courses
+        return this.courses;
     }
 
     findOne(id: string) {
-        //abaixo localiza o id para comparar, retorna string então faz cast de numero
-        return this.courses.find((course: Course) => course.id === Number(id))
+        const course = this.courses.find((course: Course) => course.id === Number(id));
+        if (!course) {
+            throw new HttpException(`Course ID ${id} nor found`, HttpStatus.NOT_FOUND);
+        }
+        return course;
     }
 
-    //abaixo estrutura dto
     create(createCourseDto: any) {
         this.courses.push(createCourseDto);
     }
 
     update(id: string, updateCourseDto: any) {
         const indexCourse = this.courses.findIndex(
-            (course: Course) => course.id === Number(id));
+            (course: Course) => course.id === Number(id),
+        );
+
         this.courses[indexCourse] = updateCourseDto;
     }
 
     remove(id: string) {
         const indexCourse = this.courses.findIndex(
-            (course: Course) => course.id === Number(id));
+            // eslint-disable-next-line prettier/prettier
+            (course: Course) => course.id === Number(id),
+        );
 
-        //abaixo numero 1 é quantidade de registros a apagar
         if (indexCourse >= 0) {
             this.courses.splice(indexCourse, 1);
         }

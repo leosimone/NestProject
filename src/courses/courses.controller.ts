@@ -1,42 +1,33 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Res } from '@nestjs/common';
-import { response } from 'express';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 
 @Controller('courses')
 export class CoursesController {
-    constructor(private readonly coursesService: CoursesService) {
-
-    }
+    constructor(private readonly coursesService: CoursesService) { }
 
     @Get()
-    findAll(@Res() response) {
-        return response.status(200).send('Lista completa');
+    findAll() {
+        return this.coursesService.findAll();
     }
 
     @Get(':id')
-    findOne(
-        @Param('id') id: string
-    ) {
-        return `Curso inicial ${id}`
+    findOne(@Param('id') id: string) {
+        return this.coursesService.findOne(id);
     }
 
     @Post()
-    @HttpCode(HttpStatus.NO_CONTENT)
     create(@Body() body) {
-        return body;
+        return this.coursesService.create(body);
     }
 
-
-    @Patch('id')
+    @Patch(':id')
     update(@Param('id') id: string, @Body() body) {
-        return `Curso ${id} atualizado`
+        return this.coursesService.update(id, body);
     }
 
     @Delete(':id')
-    remove(
-        @Param('id') id: string
-    ) {
-        return `Curso ${id} excluído`
+    remove(@Param('id') id: string) {
+        return this.coursesService.remove(id);
     }
 }
