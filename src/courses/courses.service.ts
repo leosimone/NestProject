@@ -1,50 +1,57 @@
 /* eslint-disable prettier/prettier */
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course } from './entities/course.entity';
 
 @Injectable()
 export class CoursesService {
-    private readonly courses: Course[] = [
-        {
-            id: 1,
-            name: 'Fundamentos do framework NestJS',
-            description: 'Fundamentos do framework NestJS',
-            tags: ['node.js', 'nestjs', 'javascript'],
-        },
-    ];
+    constructor(
+        @Inject('COURSES_REPOSITORY')
+        private readonly courseRepository: Repository<Course>,
+    ) {
+    }
 
     findAll() {
-        return this.courses;
+        return this.courseRepository.find();
     }
 
     findOne(id: string) {
-        const course = this.courses.find((course: Course) => course.id === Number(id));
+        const course = this.courseRepository.findOne({
+            where: {
+                id
+            }
+        });
         if (!course) {
-            throw new HttpException(`Course ID ${id} nor found`, HttpStatus.NOT_FOUND);
+            throw new NotFoundException(`Course ID ${id} nor found`);
         }
         return course;
     }
 
-    create(createCourseDto: any) {
-        this.courses.push(createCourseDto);
+    create(createCourseDto: CreateCourseDto) {
+        const course = this.courseRepository.create(createCourseDto);
+        return this.courseRepository.save(course);
     }
 
-    update(id: string, updateCourseDto: any) {
-        const indexCourse = this.courses.findIndex(
-            (course: Course) => course.id === Number(id),
-        );
-
-        this.courses[indexCourse] = updateCourseDto;
-    }
-
-    remove(id: string) {
-        const indexCourse = this.courses.findIndex(
-            // eslint-disable-next-line prettier/prettier
-            (course: Course) => course.id === Number(id),
-        );
-
-        if (indexCourse >= 0) {
-            this.courses.splice(indexCourse, 1);
+    async update(id: string, updateCourseDto: UpdateCourseDto) {
+        const course = await this.courseRepository.preload({
+            id: id, // esse + na frente converte string pra numerico
+            ...updateCourseDto,
+        });
+        if (!course) {
+            throw new NotFoundException(`Course ID ${id} nor found`);
         }
+        return this.courseRepository.save(course)
+    }
+
+    async remove(id: string) {
+        const course = await this.courseRepository.findOne({
+            where: { id }
+        });
+        if (!course) {
+            throw new NotFoundException(`Course ID ${id} nor found`);
+        }
+        return this.courseRepository.remove(course)
     }
 }
